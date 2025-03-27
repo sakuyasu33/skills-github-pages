@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中国餐桌礼仪小竞赛</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .question {
+            margin-bottom: 20px;
+        }
+        .options {
+            margin: 15px 0;
+        }
+        .option {
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .option:hover {
+            background-color: #f0f0f0;
+        }
+        .timer {
+            font-size: 24px;
+            color: #e74c3c;
+            text-align: center;
+            margin: 15px 0;
+        }
+        .result {
+            text-align: center;
+            margin-top: 30px;
+        }
+        .leaderboard {
+            margin-top: 30px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .start-screen, .preparation-screen {
+            text-align: center;
+        }
+        input[type="text"] {
+            padding: 8px;
+            margin: 10px 0;
+            width: 200px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>中国餐桌礼仪小竞赛</h1>
+        
+        <!-- 开始屏幕 -->
+        <div id="start-screen" class="start-screen">
+            <h2>欢迎参加中国餐桌礼仪小竞赛</h2>
+            <p>本竞赛共有20道题，每题5分，满分100分</p>
+            <p>每道题作答时间为10秒，未作答将自动跳转下一题</p>
+            <p>请输入您的姓名开始竞赛</p>
+            <input type="text" id="username" placeholder="请输入您的姓名">
+            <button id="start-btn">开始竞赛</button>
+        </div>
+        
+        <!-- 准备屏幕 -->
+        <div id="preparation-screen" class="preparation-screen hidden">
+            <h2>准备开始</h2>
+            <div id="preparation-timer" class="timer">准备时间：20秒</div>
+            <p>请准备好，竞赛即将开始...</p>
+        </div>
+        
+        <!-- 竞赛内容 -->
+        <div id="quiz-container" class="hidden">
+            <div id="timer" class="timer">剩余时间：10秒</div>
+            <div id="question" class="question"></div>
+            <div id="options" class="options"></div>
+            <div id="progress">题目：1/20</div>
+        </div>
+        
+        <!-- 结果屏幕 -->
+        <div id="result-screen" class="result hidden">
+            <h2>竞赛结果</h2>
+            <p id="score"></p>
+            <p id="time-used"></p>
+            <button id="view-ranking-btn">查看排名</button>
+        </div>
+        
+        <!-- 排名屏幕 -->
+        <div id="leaderboard-screen" class="leaderboard hidden">
+            <h2>竞赛排名</h2>
+            <table id="ranking-table">
+                <thead>
+                    <tr>
+                        <th>排名</th>
+                        <th>姓名</th>
+                        <th>得分</th>
+                        <th>用时</th>
+                    </tr>
+                </thead>
+                <tbody id="ranking-body">
+                    <!-- 排名数据将通过JavaScript动态生成 -->
+                </tbody>
+            </table>
+            <button id="return-btn">返回</button>
+        </div>
+    </div>
+
+    <script>
+        // 题目数据
+        const questions = [
+            {
+                question: "在正式宴席上，客人什么时候可以开始用餐？",
+                options: ["坐下后立即开始", "主人或长辈先动筷子后再开始", "看到别人吃了就可以吃", "端起饭碗后立刻吃"],
+                answer: 1
+            },
+            {
+                question: "在中国餐桌上，下面哪种行为是不礼貌的？",
+                options: ["用公筷给别人夹菜", "把筷子插在碗里的米饭上", "轻轻敲击碗筷引起注意", "B和C都不礼貌"],
+                answer: 3
+            },
+            {
+                question: "在中餐礼仪中，敬酒时应该注意什么？",
+                options: ["目光接触，举杯比对方高", "目光接触，举杯比对方低", "随意敬酒，不需要特别注意", "只需要自己喝，不管别人"],
+                answer: 1
+            },
+            {
+                question: "在圆桌宴席中，最尊贵的座位通常在哪个位置？",
+                options: ["靠近门口的位置", "面向大门的正中央位置", "靠近厨房的位置", "角落里的位置"],
+                answer: 1
+            },
+            {
+                question: "用餐时，正确摆放筷子的方式是？",
+                options: ["横放在碗的上方或筷架上", "直接插在米饭里", "竖立放在碗中", "随意放置在桌面上"],
+                answer: 0
+            },
+            {
+                question: "以下哪种关于使用筷子的行为是正确的？",
+                options: ["用筷子指人", "用筷子翻拣菜盘里的食物", "用筷子敲打碗或桌面", "用公筷给别人夹菜"],
+                answer: 3
+            },
+            {
+                question: "在中国的正式宴席上，客人吃完饭后应该怎么做？",
+                options: ["立即起身离席", "把碗筷随意放置", "等主人宣布宴席结束后再离席", "主动去厨房帮忙收拾"],
+                answer: 2
+            },
+            {
+                question: "如果餐桌上有长辈，倒茶时应该怎么做？",
+                options: ["让长辈自己倒", "用双手为长辈倒茶，并轻轻推到长辈面前", "只顾自己喝茶，不管别人", "不需要特别注意"],
+                answer: 1
+            },
+            {
+                question: "餐桌上转盘的旋转方向应是？",
+                options: ["逆时针", "顺时针", "随意转动"],
+                answer: 1
+            },
+            {
+                question: "在正式宴请中，客人该如何拒绝主人夹的菜？",
+                options: ["直接说'不想吃'", "轻轻拒绝，并表达感谢", "迅速转移话题", "不吃，但不说话"],
+                answer: 1
+            },
+            {
+                question: "在中国，用筷子敲击碗盘是表达对食物的赞赏。",
+                options: ["正确", "错误"],
+                answer: 1
+            },
+            {
+                question: "吃饭时，可以用筷子指着别人交流。",
+                options: ["正确", "错误"],
+                answer: 1
+            },
+            {
+                question: "在中国餐桌上，长辈给晚辈夹菜是表示关心和照顾。",
+                options: ["正确", "错误"],
+                answer: 0
+            },
+            {
+                question: "吃鱼时，应将鱼翻面以方便取肉。",
+                options: ["正确", "错误"],
+                answer: 1
+            },
+            {
+                question: "敬酒时，晚辈的酒杯应举得比长辈高。",
+                options: ["正确", "错误"],
+                answer: 1
+            },
+            {
+                question: "筷子不应该直接插在米饭里，因为这与祭祖仪式相似。",
+                options: ["正确", "错误"],
+                answer: 0
+            },
+            {
+                question: "在正式场合喝汤时可以直接用碗就口喝，而不需要用勺子。",
+                options: ["正确", "错误"],
+                answer: 1
+            },
+            {
+                question: "茶壶嘴可随意朝向座位方向。",
+                options: ["正确", "错误"],
+                answer: 1
+            },
+            {
+                question: "如果餐具掉到地上，应该让服务员或主人处理，而不是自己捡起来继续用。",
+                options: ["正确", "错误"],
+                answer: 0
+            },
+            {
+                question: "用餐时，应该尽量避免把自己的手臂伸到餐桌中央夹菜。",
+                options: ["正确", "错误"],
+                answer: 0
+            }
+        ];
+
+        // 全局变量
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let timer;
+        let preparationTimer;
+        let username = "";
+        let startTime;
+        let users = [];
+        let shuffledQuestions = [];
+
+        // DOM元素
+        const startScreen = document.getElementById('start-screen');
+        const preparationScreen = document.getElementById('preparation-screen');
+        const quizContainer = document.getElementById('quiz-container');
+        const resultScreen = document.getElementById('result-screen');
+        const leaderboardScreen = document.getElementById('leaderboard-screen');
+        const questionElement = document.getElementById('question');
+        const optionsElement = document.getElementById('options');
+        const timerElement = document.getElementById('timer');
+        const preparationTimerElement = document.getElementById('preparation-timer');
+        const scoreElement = document.getElementById('score');
+        const timeUsedElement = document.getElementById('time-used');
+        const rankingBody = document.getElementById('ranking-body');
+        const progressElement = document.getElementById('progress');
+        const startBtn = document.getElementById('start-btn');
+        const viewRankingBtn = document.getElementById('view-ranking-btn');
+        const returnBtn = document.getElementById('return-btn');
+
+        // 事件监听器
+        startBtn.addEventListener('click', startQuiz);
+        viewRankingBtn.addEventListener('click', showLeaderboard);
+        returnBtn.addEventListener('click', () => {
+            leaderboardScreen.classList.add('hidden');
+            resultScreen.classList.remove('hidden');
+        });
+
+        // 开始竞赛
+        function startQuiz() {
+            username = document.getElementById('username').value.trim();
+            if (!username) {
+                alert('请输入您的姓名');
+                return;
+            }
+            
+            startScreen.classList.add('hidden');
+            preparationScreen.classList.remove('hidden');
+            
+            // 开始准备倒计时
+            let preparationTime = 20;
+            preparationTimerElement.textContent = `准备时间：${preparationTime}秒`;
+            preparationTimer = setInterval(() => {
+                preparationTime--;
+                preparationTimerElement.textContent = `准备时间：${preparationTime}秒`;
+                
+                if (preparationTime <= 0) {
+                    clearInterval(preparationTimer);
+                    preparationScreen.classList.add('hidden');
+                    startQuizGame();
+                }
+            }, 1000);
+        }
+
+        // 开始竞赛游戏
+        function startQuizGame() {
+            // 打乱题目顺序
+            shuffledQuestions = [...questions].sort(() => Math.random() - 0.5);
+            currentQuestionIndex = 0;
+            score = 0;
+            startTime = new Date();
+            
+            quizContainer.classList.remove('hidden');
+            showQuestion();
+        }
+
+        // 显示题目
+        function showQuestion() {
+            if (currentQuestionIndex >= shuffledQuestions.length) {
+                endQuiz();
+                return;
+            }
+            
+            const questionData = shuffledQuestions[currentQuestionIndex];
+            questionElement.textContent = `${currentQuestionIndex + 1}. ${questionData.question}`;
+            optionsElement.innerHTML = '';
+            
+            questionData.options.forEach((option, index) => {
+                const optionElement = document.createElement('div');
+                optionElement.classList.add('option');
+                optionElement.textContent = option;
+                optionElement.addEventListener('click', () => selectOption(index));
+                optionsElement.appendChild(optionElement);
+            });
+            
+            progressElement.textContent = `题目：${currentQuestionIndex + 1}/${shuffledQuestions.length}`;
+            
+            // 开始倒计时
+            let timeLeft = 10;
+            timerElement.textContent = `剩余时间：${timeLeft}秒`;
+            clearInterval(timer);
+            timer = setInterval(() => {
+                timeLeft--;
+                timerElement.textContent = `剩余时间：${timeLeft}秒`;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    goToNextQuestion();
+                }
+            }, 1000);
+        }
+
+        // 选择选项
+        function selectOption(selectedIndex) {
+            clearInterval(timer);
+            
+            const correctAnswerIndex = shuffledQuestions[currentQuestionIndex].answer;
+            if (selectedIndex === correctAnswerIndex) {
+                score += 5;
+            }
+            
+            goToNextQuestion();
+        }
+
+        // 跳转到下一题
+        function goToNextQuestion() {
+            currentQuestionIndex++;
+            showQuestion();
+        }
+
+        // 结束竞赛
+        function endQuiz() {
+            clearInterval(timer);
+            quizContainer.classList.add('hidden');
+            resultScreen.classList.remove('hidden');
+            
+            const endTime = new Date();
+            const timeUsed = Math.floor((endTime - startTime) / 1000);
+            
+            scoreElement.textContent = `您的得分：${score}分`;
+            timeUsedElement.textContent = `用时：${timeUsed}秒`;
+            
+            // 保存用户成绩
+            users.push({ username, score, timeUsed });
+            users.sort((a, b) => {
+                if (b.score !== a.score) {
+                    return b.score - a.score;
+                }
+                return a.timeUsed - b.timeUsed;
+            });
+        }
+
+        // 显示排名
+        function showLeaderboard() {
+            resultScreen.classList.add('hidden');
+            leaderboardScreen.classList.remove('hidden');
+            
+            rankingBody.innerHTML = '';
+            
+            users.forEach((user, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${user.username}</td>
+                    <td>${user.score}分</td>
+                    <td>${user.timeUsed}秒</td>
+                `;
+                rankingBody.appendChild(row);
+            });
+        }
+    </script>
+</body>
+</html>
